@@ -6,8 +6,8 @@
  * Adapted by Maarten Janssen in 2015. maarten@cheerful.nl
  */
 
-#ifndef LM15SGFNZ07 _h
-#define LM15SGFNZ07 _h
+#ifndef LM15SGFNZ07_h
+#define LM15SGFNZ07_h
 
 #include <Arduino.h>
 
@@ -32,14 +32,14 @@ class LM15SGFNZ07 {
   public:
     LM15SGFNZ07(byte pinCs, byte pinReset, byte pinRs);
     void init(void);
-    void clear(unsigned int color);
+    void clear(uint16_t color);
     void drawBitmap(unsigned char x,unsigned char y, unsigned char width, unsigned char height, unsigned short *bitmap);
-    void drawBitmap(unsigned char x,unsigned char y, unsigned char width, unsigned char height, const PROGMEM unsigned short *bitmap);
-    void drawLine(unsigned char x1, unsigned char y1, unsigned x2, unsigned char y2, unsigned int color);
-    void drawPixel(unsigned char x, unsigned char y,unsigned int color);
-    void drawRect(unsigned char x,unsigned char y, unsigned char width, unsigned char height, unsigned int color);
-    void drawString(char *str, unsigned char x, unsigned char y, unsigned int color, unsigned int background);
-    void fillRect(unsigned char x,unsigned char y, unsigned char width, unsigned char height, unsigned int color);
+    void drawBitmap(unsigned char x,unsigned char y, unsigned char width, unsigned char height, const unsigned short *bitmap);
+    void drawLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2, uint16_t color);
+    void drawPixel(unsigned char x, unsigned char y,uint16_t color);
+    void drawRect(unsigned char x,unsigned char y, unsigned char width, unsigned char height, uint16_t color);
+    void drawString(char *str, unsigned char x, unsigned char y, uint16_t color, uint16_t background);
+    void fillRect(unsigned char x,unsigned char y, unsigned char width, unsigned char height, uint16_t color);
     void inverseScreen(bool inverse);
     void setContrast(unsigned char contrast);
     void setInverseLines(unsigned char y, unsigned char height, unsigned char inverseMode);

@@ -35,21 +35,20 @@
 
 #include <SPI.h>
 #include <Arduino.h>
-#include <avr/pgmspace.h>
-#include <digitalWriteFast.h>
+//#include <avr/pgmspace.h>
+//#include <digitalWriteFast.h>
 #include <font.h>
 #include "LM15SGFNZ07.h"
 
 
-#define LCD_RS_ON       digitalWriteFast(LCD_RS,HIGH);      // Put LCD in command mode
-#define LCD_RS_OFF      digitalWriteFast(LCD_RS,LOW);     // Put LCD in data mode
-#define LCD_CS_OFF      digitalWriteFast(LCD_CS,HIGH);      // Disable LCD
-#define LCD_CS_ON       digitalWriteFast(LCD_CS,LOW);     // Enable LCD
-#define LCD_RESET_ON    digitalWriteFast(LCD_RESET,LOW);    // Put LCD in reset mode
-#define LCD_RESET_OFF   digitalWriteFast(LCD_RESET,HIGH);   // Put LCD in normal mode
+#define LCD_RS_ON       digitalWrite(LCD_RS,HIGH);      // Put LCD in command mode
+#define LCD_RS_OFF      digitalWrite(LCD_RS,LOW);     // Put LCD in data mode
+#define LCD_CS_OFF      digitalWrite(LCD_CS,HIGH);      // Disable LCD
+#define LCD_CS_ON       digitalWrite(LCD_CS,LOW);     // Enable LCD
+#define LCD_RESET_ON    digitalWrite(LCD_RESET,LOW);    // Put LCD in reset mode
+#define LCD_RESET_OFF   digitalWrite(LCD_RESET,HIGH);   // Put LCD in normal mode
 
-
-const unsigned char initData[139] PROGMEM = {
+const unsigned char initData[139] = {
   0xF4, 0x90, 0xB3, 0xA0, 0xD0, 0xF0, 0xE2, 0xD4, 0x70, 0x66,
   0xB2, 0xBA, 0xA1, 0xA3, 0xAB, 0x94, 0x95, 0x95, 0x95, 0xF5,
   0x90, 0xF1, 0x00, 0x10, 0x22, 0x30, 0x45, 0x50, 0x68, 0x70,
@@ -66,7 +65,7 @@ const unsigned char initData[139] PROGMEM = {
   0xA2, 0xF4, 0x60, 0xF0, 0x40, 0x50, 0xC0, 0xF4, 0x70
 };
 
-const unsigned char setupData[19] PROGMEM = {
+const unsigned char setupData[19] = {
   0xF0, 0x81, 0xF4, 0xB3, 0xA0, 0xF0, 0x06, 0x10, 0x20, 0x30,
   0xF5, 0x0F, 0x1C, 0x2F, 0x34, 0xF0, 0x91, 0xF5, 0x80
 };
@@ -91,6 +90,7 @@ LM15SGFNZ07::LM15SGFNZ07(byte pinCs, byte pinReset, byte pinRs) {
  */
 void LM15SGFNZ07::init(void) {
   SPI.begin();
+  SPI.setFrequency(35000000);
   pinMode(LCD_CS, OUTPUT);
   pinMode(LCD_RESET, OUTPUT);
   pinMode(LCD_RS, OUTPUT);
@@ -106,7 +106,7 @@ void LM15SGFNZ07::init(void) {
   LCD_CS_ON;
 
   for (int i = 0; i < 139; i ++) {
-    SPI.transfer(pgm_read_byte_near(initData + i));
+    SPI.transfer(initData[i]);
   }
 
   delay(1);
@@ -115,7 +115,7 @@ void LM15SGFNZ07::init(void) {
   LCD_CS_ON;
 
   for (int i = 0; i < 19; i ++) {
-    SPI.transfer(pgm_read_byte_near(setupData + i));
+    SPI.transfer(setupData[i]);
   }
 
   LCD_RS_OFF;
@@ -130,7 +130,7 @@ void LM15SGFNZ07::init(void) {
  *
  * color - 12-bit color value
  */
-void LM15SGFNZ07::clear(unsigned int color) {
+void LM15SGFNZ07::clear(uint16_t color) {
   LCD_CS_ON;
   setWindow(0, 0, 101, 80);
   for (int i = 0; i < 8080; i++) {
@@ -170,11 +170,11 @@ void LM15SGFNZ07::drawBitmap(unsigned char x, unsigned char y, unsigned char wid
  * height - Height of the bitmap
  * bitmap - Pointer to the bitmap image
  */
-void LM15SGFNZ07::drawBitmap(unsigned char x,unsigned char y, unsigned char width, unsigned char height, const PROGMEM unsigned short *bitmap) {
+void LM15SGFNZ07::drawBitmap(unsigned char x,unsigned char y, unsigned char width, unsigned char height, const unsigned short *bitmap) {
   LCD_CS_ON;
   setWindow(x, y, width, height);
   for (int i = 0; i < width * height; i ++) {
-    unsigned int data = pgm_read_word_near(bitmap ++);
+    uint16_t data = *(bitmap ++);
     SPI.transfer(data >> 8);
     SPI.transfer(data & 0xFF);
   }
@@ -191,7 +191,7 @@ void LM15SGFNZ07::drawBitmap(unsigned char x,unsigned char y, unsigned char widt
  * y2    - Y coordinate of the second point
  * color - 12-bit color value
  */
-void LM15SGFNZ07::drawLine(unsigned char x1, unsigned char y1, unsigned x2, unsigned char y2, unsigned int color) {
+void LM15SGFNZ07::drawLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2, uint16_t color) {
   LCD_CS_ON;
   if (y1 == y2) {
     // Simple solution for horizontal lines.
@@ -250,7 +250,7 @@ void LM15SGFNZ07::drawLine(unsigned char x1, unsigned char y1, unsigned x2, unsi
  * y     - Y coordinate of pixel
  * color - 12-bit color value
  */
-void LM15SGFNZ07::drawPixel(unsigned char x, unsigned char y, unsigned int color) {
+void LM15SGFNZ07::drawPixel(unsigned char x, unsigned char y, uint16_t color) {
   LCD_CS_ON;
   setWindow(x, y, 1, 1);
   SPI.transfer(color >> 8 );
@@ -268,7 +268,7 @@ void LM15SGFNZ07::drawPixel(unsigned char x, unsigned char y, unsigned int color
  * height - Rectangle height
  * color  - 12-bit color value
  */
-void LM15SGFNZ07::drawRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, unsigned int color) {
+void LM15SGFNZ07::drawRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, uint16_t color) {
   LCD_CS_ON;
   // Top
   setWindow(x, y, width, 1);
@@ -310,17 +310,17 @@ void LM15SGFNZ07::drawRect(unsigned char x, unsigned char y, unsigned char width
  * color      - 12-bit text color
  * background - 12-bit background color
  */
-void LM15SGFNZ07::drawString(char *str, unsigned char x, unsigned char y, unsigned int color, unsigned int background) {
+void LM15SGFNZ07::drawString(char *str, unsigned char x, unsigned char y, uint16_t color, uint16_t background) {
   LCD_CS_ON;
   int strPos = 0;
 
   while (str[strPos] != 0) {
-    unsigned int glyphPtr   = (str[strPos] - 32) * 6;
-    unsigned int glyphWidth = pgm_read_byte_near(font + (glyphPtr ++));
+    uint16_t glyphPtr   = (str[strPos] - 32) * 6;
+    uint16_t glyphWidth = font[glyphPtr ++];
 
     for (int i = 0; i < glyphWidth; i ++) {
       setWindow(x ++, y, 1, 8);
-      unsigned char glyphData = pgm_read_byte_near(font + (glyphPtr ++));
+      unsigned char glyphData = font[glyphPtr ++];
 
       for (unsigned char mask = 0x80; mask; mask >>= 1) {
         SPI.transfer(glyphData & mask ? color >> 8 : background >> 8);
@@ -348,7 +348,7 @@ void LM15SGFNZ07::drawString(char *str, unsigned char x, unsigned char y, unsign
  * height - Rectangle height
  * color  - 12-bit color value
  */
-void LM15SGFNZ07::fillRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, unsigned int color) {
+void LM15SGFNZ07::fillRect(unsigned char x, unsigned char y, unsigned char width, unsigned char height, uint16_t color) {
   LCD_CS_ON;
   setWindow(x, y, width, height);
   for (int i = 0; i < width * height; i ++) {
